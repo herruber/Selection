@@ -53,3 +53,28 @@ This keeps resource memory management separate from systems such as `InstanceSys
 This is a deliberately limited extract intended to demonstrate code structure and architectural approach.
 
 The complete rendering framework contains additional resource management, rendering, scene hierarchy, GPU synchronization, acceleration structures and other systems that are outside the scope of this sample.
+
+# CPU Shader Testing Framework & Node System
+## TypeScript Shader Testing
+
+The rendering framework also includes a node-based TypeScript shader system designed to make GPU shader code composable and testable.
+
+Shaders are defined using strongly typed TypeScript nodes and compiled into WGSL for normal GPU execution.
+
+The same shader definitions can also be executed on the CPU through a rendering simulator, allowing shader behavior to be tested directly through Node and Jest.
+
+The included example demonstrates:
+
+- Typed vertex inputs, varyings, uniforms and fragment outputs.
+- Vertex and fragment shader construction.
+- WGSL generation from the TypeScript shader definitions.
+- Simulated uniforms, textures and samplers.
+- CPU execution and rasterization of shader behavior.
+- Rendering-specific test assertions.
+
+For example:
+
+```ts
+simulation.toBeMostlyEmpty(0.5);
+simulation.toHaveNonZeroNormals("normal");
+simulation.toHaveDepth();
