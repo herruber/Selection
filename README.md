@@ -39,7 +39,7 @@ Instance index `0` is reserved for the world root; normal instance allocations t
 - `system.base.ts` — Base contract for registered systems.
 - `instance.component.ts` — Example of a specialized graphics component.
 - `instance.system.ts` — Example of system-level management of component data.
-- 
+  
 ## Resource Lifecycle
 
 The example intentionally does not include the complete resource lifecycle.
