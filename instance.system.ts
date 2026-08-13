@@ -1,4 +1,4 @@
-﻿import { Actor } from "../actor/actor";
+import { Actor } from "../actor/actor";
 import { InstanceComponent } from "../component/instance.component";
 import { BufferUsage, StructArrayBuffer } from "../resources/cpu.buffer";
 import { ResourceSystem } from "./resource.system";
@@ -8,75 +8,86 @@ import { SystemBase } from "./system.base";
  * Owns global GPU instance allocation.
  *
  * InstanceComponents contain per-actor instance data.
- * The InstanceSystem assigns buffer ranges and uploads newly
- * registered components to the shared instance buffer.
+ * InstanceSystem assigns ranges in the shared instance buffer and uploads
+ * newly registered components.
  *
- * Other systems consume the buffer through ResourceSystem,
- * avoiding direct dependencies on InstanceSystem.
+ * Other systems consume the buffer through ResourceSystem, avoiding a direct
+ * dependency on InstanceSystem.
  */
 export class InstanceSystem extends SystemBase {
-    private nextId = 0;
-    private instances: StructArrayBuffer<'Instance'>;
-    private newComponents: InstanceComponent[] = [];
-    private instToActor: Map<number, Actor> = new Map();
+    /**
+     * Instance index 0 is reserved for the root.
+     * Allocated component ranges therefore begin at index 1.
+     */
+    private nextId = 1;
 
-    get currentInstanceCount() { return this.nextId }
+    private instances: StructArrayBuffer<"Instance">;
+    private newComponents: InstanceComponent[] = [];
+    private instanceToActor = new Map<number, Actor>();
+
+    get currentInstanceCount() {
+        return this.nextId;
+    }
 
     initialize(resources: ResourceSystem) {
         this.instances = new StructArrayBuffer({
-            label: 'Level | InstaceBuffer',
-            key: 'Instance',
+            label: "Level | InstanceBuffer",
+            key: "Instance",
             usage: BufferUsage.STORAGE,
             arrayCount: 100000
         });
-        resources.provide('instanceBuffer', this.instances);
+
+        resources.provide("instanceBuffer", this.instances);
     }
 
     /**
-     * Register these instances
-     * Updates flag BVH as dirty
-     * Flag instances as dirty
-     * @param instances
-     * @returns
+     * Registers an InstanceComponent in the global instance buffer.
+     *
+     * Each component receives a contiguous range large enough for its
+     * maximum instance capacity. Components already owning a range are
+     * returned without being registered again.
      */
     register(component: InstanceComponent) {
         if (!component) {
-            throw new Error(`No instances component attached to meshfilter`)
+            throw new Error("No InstanceComponent provided.");
         }
 
-        if (component.bufferIndex > 0) return component.bufferIndex;
+        if (component.bufferIndex > 0) {
+            return component.bufferIndex;
+        }
+
+        const bufferIndex = this.nextId;
+
+        component.setInstanceBufferIndex(bufferIndex);
 
         this.newComponents.push(component);
-
-        component.instanceLocation(this.nextId);
-
-        this.instToActor.set(this.nextId, component.owner);
+        this.instanceToActor.set(bufferIndex, component.owner);
 
         this.nextId += component.maxInstanceCount;
 
-        return component.bufferIndex;
+        return bufferIndex;
     }
 
     /**
-     * TODO: set new instances into this instances buffer
-     * @param time
-     * @param delta
+     * Uploads newly registered component data into the shared instance buffer.
      */
     update(time: number, delta: number): void {
-        if (this.newComponents.length === 0) return;
+        if (this.newComponents.length === 0) {
+            return;
+        }
 
-        for (let i = 0; i < this.newComponents.length; i++) {
-            const comp = this.newComponents[i];
+        for (const component of this.newComponents) {
             this.instances.setBytes(
-                comp.instances.data,
-                comp.bufferIndex * comp.instances.uniforms.byteSize
-            )
+                component.instances.data,
+                component.bufferIndex * component.instances.uniforms.byteSize
+            );
         }
     }
 
+    /**
+     * Clears transient registration state after the frame has completed.
+     */
     endOfFrame(): void {
         this.newComponents = [];
     }
-
-
 }
