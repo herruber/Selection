@@ -4,25 +4,35 @@ import { ResourceSystem } from "./resource.system";
 export abstract class SystemBase {
 
     /**
-     * Happens once before the App starts
-     * @param resources a provided ResourceSystem
-     * @param systems the complete ServiceRegistry
+     * Initializes the system before the application starts.
+     *
+     * Resources provide access to shared engine data such as buffers,
+     * textures and other registered resources.
+     *
+     * The system registry provides access to other systems when required,
+     * without forcing direct construction dependencies between them.
      */
-    abstract initialize(resources: ResourceSystem, systems: ServiceRegistry<SystemBase>);
+    abstract initialize(
+        resources: ResourceSystem,
+        systems: ServiceRegistry<SystemBase>
+    ): void;
 
     /**
-     * Fires every frame.
-     * Should handle and update logic about its state, its components and other resources.
-     * @param time
-     * @param delta
+     * Performs per-frame work owned by this system.
+     *
+     * Systems process only the components and resources relevant to them,
+     * rather than iterating over every component in the world.
      */
-    abstract update(time: number, delta: number): void;
+    abstract update(
+        time: number,
+        delta: number
+    ): void;
 
     /**
-     * Fires as the last step of every frame.
-     * This is ment to clear variables, arrays, set booleans and other simple instructions to make sure the system is ready for another frame.
+     * Performs end-of-frame cleanup and state transitions.
+     *
+     * Used for transient collections, dirty flags and other frame-local state
+     * that should be reset before the next frame begins.
      */
     abstract endOfFrame(): void;
-
-
 }
