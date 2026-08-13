@@ -17,7 +17,7 @@ describe("Shader simulation", () => {
         .add("Frame", def.struct({
             time: declare.scalar("f32"),
             deltaTime: declare.scalar("f32"),
-            camera: declare.struct(/* Camera */)
+            camera: declare.struct(structs.Camera)
         }))
         .add("GbufferOutput", def.struct({
             albedo: declare.location(declare.vec4("f32")),
@@ -94,7 +94,10 @@ describe("Shader simulation", () => {
             }
         );
 
-        simulation.toBeBlack("albedo");
+        simulation.toBeMostlyEmpty(0.5);
+        simulation.toHaveNonZeroNormals("normal");
+        simulation.toHaveDepth();
+
         simulation.toJson();
     });
 });
