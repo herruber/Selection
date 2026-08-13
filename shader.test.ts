@@ -90,8 +90,31 @@ describe("Shader simulation", () => {
             vertex.artifact.root,
             fragment.artifact.root,
             {
-                // Reduced test setup...
+            vertex: {
+                bufferObject: {
+                    vertexCount: 3,
+                    vertices: [
+                        
+                        2, 0, 0,
+                        -2, 0, 0,
+                        0, 2, 0
+                    ]
+                }
+            },
+            fragment: {
+                width: 512,
+                height: 512,
+                output: [
+                    {
+                        format: "rgba8unorm"
+                    }
+                ]
+            },
+            bindgroups: {
+                vertex: bindings,
+                fragment: bindings
             }
+        }
         );
 
         simulation.toBeMostlyEmpty(0.5);
